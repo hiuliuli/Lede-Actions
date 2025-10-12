@@ -34,7 +34,7 @@ jobs:
       - name: 复制.config文件
         run: |
           cp .config lede/
-          mkdir lede/dl
+          mkdir -p lede/dl
           cp erofs-utils-1.8.10.tar.gz lede/dl
       
       - name: 下载dl库
