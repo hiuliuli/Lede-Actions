@@ -1,4 +1,4 @@
-name: Build Lede Image (Simple)
+name: Build Openwrt
 
 on:
   workflow_dispatch:
