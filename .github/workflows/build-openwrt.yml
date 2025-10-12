@@ -12,7 +12,7 @@ on:
 
 env:
   # Lede 源码仓库
-  LEDE_REPO: 'https://github.com/coolsnowwolf/lede'
+  LEDE_REPO: 'https://github.com/hiuliuli/lede'
   # 本地仓库目录
   LEDE_DIR: 'lede'
   # 编译超时时间 (分钟)，防止无休止运行
