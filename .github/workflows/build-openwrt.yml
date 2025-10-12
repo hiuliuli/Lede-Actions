@@ -1,121 +1,54 @@
 name: Build Openwrt
-
 on:
   workflow_dispatch:
-    inputs:
-      # Lede 源码默认使用 master 分支，这里不再提供分支选择
-      # 如果你需要选择分支，请参考上一个复杂版本，或者手动修改下面的 LEADE_BRANCH 变量
-      branch:
-        description: 'Lede 源分支 (默认为 master)'
-        required: false
-        default: 'master'
-
-env:
-  # Lede 源码仓库
-  LEDE_REPO: 'https://github.com/hiuliuli/lede'
-  # 本地仓库目录
-  LEDE_DIR: 'lede'
-  # 编译超时时间 (分钟)，防止无休止运行
-  STEP_TIMEOUT: 480 # 8小时
 
 jobs:
   build:
-    name: Build Lede for ${{ github.event.inputs.branch || 'master' }}
     runs-on: ubuntu-22.04
-
     steps:
-      - name: Checkout Current Repository
-        uses: actions/checkout@v4 # 检出当前仓库，为了获取 .config 文件
-
-      - name: Set up Environment Variables
-        run: |
-          echo "CURRENT_DATE=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
-          echo "LEDE_BRANCH=${{ github.event.inputs.branch || 'master' }}" >> $GITHUB_ENV # 确保分支变量被设置
-
-      - name: Install Build Dependencies
-        timeout-minutes: 10
+      - name: 检出当前仓库
+        uses: actions/checkout@v4
+      
+      - name: 更新系统环境和安装必要依赖
         run: |
           sudo apt update -y
           sudo apt full-upgrade -y
-          sudo apt install -y sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache clang cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool llvm lrzsz libnsl-dev ninja-build p7zip p7zip-full patch pkgconf python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
-          # coolsnowwolf/lede 可能需要额外依赖，如果编译报错，请根据错误信息添加
-          
-      - name: Clone Lede Source Code
-        timeout-minutes: 30
+          sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+          bzip2 ccache clang cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext \
+          genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
+          libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
+          libreadline-dev libssl-dev libtool llvm lrzsz libnsl-dev ninja-build p7zip p7zip-full patch pkgconf \
+          python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
+          swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+      
+      - name: 拉取仓库源码
         run: |
-          git clone --depth 1 -b ${LEDE_BRANCH} ${LEDE_REPO} ${LEDE_DIR}
-          ls -la ${LEDE_DIR}
-
-      - name: Copy .config to Lede Source
+          git clone https://github.com/hiuliuli/lede
+      
+      - name: 更新feeds
         run: |
-          if [ -f ./.config ]; then # 检查当前仓库根目录是否存在 .config 文件
-            cp ./.config ${LEDE_DIR}/.config
-            echo "Copied ./.config from current repository to ${LEDE_DIR}/.config"
-          else
-            echo "Error: .config file not found in the root of the current repository. Cannot proceed."
-            exit 1
-          fi
-
-      - name: Update Feeds
-        working-directory: ${{ env.LEDE_DIR }}
-        timeout-minutes: 30
-        run: |
+          cd lede
           ./scripts/feeds update -a
           ./scripts/feeds install -a
-
-      - name: Prepare Configuration
-        working-directory: ${{ env.LEDE_DIR }}
-        timeout-minutes: 5
+      
+      - name: 复制.config文件
         run: |
-          # 确保 .config 文件有效，并生成编译所需的 makefile 等
+          cp .config lede/
+      
+      - name: 下载dl库
+        run: |
+          cd lede
           make defconfig
-          echo "Final .config content:"
-          cat ./.config
-
-      - name: Download all packages (Optional)
-        working-directory: ${{ env.LEDE_DIR }}
-        timeout-minutes: ${{ env.STEP_TIMEOUT }}
+          make download -j8
+      
+      - name: 编译固件
         run: |
-          echo "Downloading all packages... This might take a while."
-          make download -j8 || make download -j1
-
-      - name: Compile Lede
-        working-directory: ${{ env.LEDE_DIR }}
-        timeout-minutes: ${{ env.STEP_TIMEOUT }}
-        run: |
-          echo "Starting Lede compilation..."
-          make -j$(nproc) V=s
-
-      - name: Identify and Package Images
-        working-directory: ${{ env.LEDE_DIR }}
-        timeout-minutes: 5
-        run: |
-          # 假设镜像在 bin/targets/ 目录下，并且有各种后缀
-          # 收集所有 bin/targets 下的固件文件
-          echo "Looking for compiled images in bin/targets/..."
-          
-          # 创建一个用于保存所有镜像的目录
-          mkdir -p ${{ github.workspace }}/artifacts/lede_firmware_${CURRENT_DATE}
-          
-          # 查找 bin/targets/ 目录下的所有固件文件
-          # 排除 *.buildinfo, *.manifest, *.kernel, *.rootfs, .config 等辅助文件
-          find bin/targets -type f \( -name "*.img" -o -name "*.bin" -o -name "*.elf" -o -name "*.gz" -o -name "*.tar" \) \
-            -not -name "*buildinfo*" -not -name "*manifest*" -not -name "*kernel*" -not -name "*rootfs*" -not -name "*config*" \
-            -exec cp {} ${{ github.workspace }}/artifacts/lede_firmware_${CURRENT_DATE}/ \; || true
-          
-          if [ -z "$(ls -A ${{ github.workspace }}/artifacts/lede_firmware_${CURRENT_DATE})" ]; then
-            echo "No main compiled images found. Please check the compilation logs or your .config."
-            # 不强制失败，有时只编译了特定包，没有生成完整的固件
-            # exit 1
-          else
-            echo "Found and copied compiled images."
-            ls -laR ${{ github.workspace }}/artifacts/lede_firmware_${CURRENT_DATE}
-          fi
-
-      - name: Upload Artifacts
+          cd lede
+          make V=s -j$(nproc)
+      
+      - name: 上传固件
         uses: actions/upload-artifact@v4
         with:
-          name: lede-firmware-${{ env.CURRENT_DATE }}
-          path: ${{ github.workspace }}/artifacts/lede_firmware_${{ env.CURRENT_DATE }}
-          retention-days: 7 # 7天后自动删除
-          if-no-files-found: ignore # 如果没有找到文件，则忽略此步骤错误
+          path: lede/bin/targets/**/*.gz
+          if-no-files-found: warn
+
