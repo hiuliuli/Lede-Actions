@@ -51,4 +51,3 @@ jobs:
         with:
           path: lede/bin/targets/**/*.gz
           if-no-files-found: warn
-
