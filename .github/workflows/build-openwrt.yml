@@ -23,7 +23,7 @@ jobs:
       
       - name: 拉取仓库源码
         run: |
-          git clone https://github.com/hiuliuli/lede
+          git clone https://github.com/coolsnowwolf/lede
       
       - name: 更新feeds
         run: |
@@ -34,16 +34,13 @@ jobs:
       - name: 复制.config文件
         run: |
           cp .config lede/
+          mkdir lede/dl
+          cp erofs-utils-1.8.10.tar.gz lede/dl
       
       - name: 下载dl库
         run: |
           cd lede
           make defconfig
-          make download -j8
-      
-      - name: 复制并替换编译失败的dl库
-        run: |
-          cp erofs-utils-1.8.10.tar.gz lede/dl
           make download -j8
       
       - name: 编译固件
@@ -56,4 +53,3 @@ jobs:
         with:
           path: lede/bin/targets/**/*.gz
           if-no-files-found: warn
-
