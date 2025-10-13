@@ -1,0 +1,25 @@
+name: Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 创建文件
+      run: |
+        mkdir -p aa/bb/cc
+        echo "Test text" > aa/bb/cc/test.txt
+    
+    - name: 移动文件
+      run: mv aa/bb/cc/test.txt $PWD
+    
+    - name: 上传文件
+      uses: actions/upload-artifact@v4
+      with:
+          name: test.txt
+          path: ./*es*.txt
+          retention-days: 1
