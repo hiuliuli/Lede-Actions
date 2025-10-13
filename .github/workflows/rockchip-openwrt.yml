@@ -93,5 +93,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.FIRMWARE_TAG }}
-          path: *${{ env.FIRMWARE_TAG }}*.img.gz
+          path: ./*${{ env.FIRMWARE_TAG }}*.img.gz
           retention-days: 3
