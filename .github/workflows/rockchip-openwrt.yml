@@ -4,6 +4,7 @@ on:
 
 env:
   FIRMWARE_TAG: rockchip
+  FIRMWARE_TYPE: docker
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -53,7 +54,9 @@ jobs:
           ./scripts/feeds install -a
       
       - name: 复制.config文件
-        run: cp .config lede/
+        run: |
+          cat ${{ env.FIRMWARE_TYPE }}.config > .config
+          cp .config lede/
       
       - name: 下载dl库
         run: |
