@@ -1,10 +1,9 @@
 name: Build Openwrt
 on:
   workflow_dispatch:
-    tags: 
-    - '*'
+  
 env:
-  FIRMWARE_TAG: Rockchip
+  FIRMWARE_TAG: rockchip
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -75,5 +74,5 @@ jobs:
       - name: 上传固件
         uses: actions/upload-artifact@v4
         with:
-          path: lede/bin/targets/${{ env.FIRMWARE_TAG }}/**/*.img.gz
+          path: lede/bin/targets/${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz
           retention-days: 7
