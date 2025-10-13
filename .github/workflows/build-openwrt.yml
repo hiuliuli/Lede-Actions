@@ -74,4 +74,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: lede/bin/targets/**/*.gz
+          files: lede/bin/targets/**/*.img.gz
