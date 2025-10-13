@@ -70,7 +70,7 @@ jobs:
           make V=s -j$(nproc)
       
       - name: 创建发布
-        uses: softprops/action-gh-release@master
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
