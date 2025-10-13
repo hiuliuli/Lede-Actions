@@ -2,6 +2,8 @@ name: Build Openwrt
 on:
   workflow_dispatch:
 
+env:
+  FIRMWARE_TAG: Rockchip
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -42,7 +44,7 @@ jobs:
           echo "硬盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
       
       - name: 检出当前仓库
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
       
       - name: 拉取目标仓库源码
         run: |
@@ -70,8 +72,8 @@ jobs:
           make V=s -j$(nproc)
       
       - name: 创建发布
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          files: lede/bin/targets/**/*.img.gz
+          tag: ${{ env.FIRMWARE_TAG }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          bodyFile: lede/bin/targets/**/*.img.gz
