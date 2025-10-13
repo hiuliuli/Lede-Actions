@@ -6,12 +6,9 @@ env:
   FIRMWARE_TAG: rockchip
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      
       - name: 初始化环境
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
           docker rmi $(docker images -q)
           sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
@@ -47,8 +44,7 @@ jobs:
         uses: actions/checkout@main
       
       - name: 拉取目标仓库源码
-        run: |
-          git clone https://github.com/hiuliuli/lede
+        run: git clone https://github.com/hiuliuli/lede
       
       - name: 更新feeds
         run: |
@@ -57,8 +53,7 @@ jobs:
           ./scripts/feeds install -a
       
       - name: 复制.config文件
-        run: |
-          cp .config lede/
+        run: cp .config lede/
       
       - name: 下载dl库
         run: |
@@ -71,9 +66,12 @@ jobs:
           cd lede
           make V=s -j$(nproc)
       
+      - name: 移动固件
+        run: mv lede/bin/targets/${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz ${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz
+      
       - name: 上传固件
         uses: actions/upload-artifact@v4
-        run: mv lede/bin/targets/${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz ${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz
         with:
+          name: ${{ env.FIRMWARE_TAG }}
           path: ${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz
-          retention-days: 7
+          retention-days: 3
