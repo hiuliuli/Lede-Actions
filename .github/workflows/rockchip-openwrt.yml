@@ -1,14 +1,30 @@
 name: Build Openwrt
 on:
   workflow_dispatch:
-
+    inputs:
+      firmware_type:
+        description: '固件类型（包含不同插件的固件，默认mini固件）'
+        required: true
+        default: 'mini'
+        type: string
+        
 env:
   FIRMWARE_TAG: rockchip
-  FIRMWARE_TYPE: docker
+  
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+    
+      - name: 输入验证
+        run: |
+          env="${{ inputs.firmware_type }}"
+          if [[ "$env" != "mini" && "$env" != "docker" ]]; then
+            echo "Error: Invalid environment value '${env}'. Must be 'mini' or 'docker'."
+            exit 1
+          fi
+          echo "Input validation passed."
+
       - name: 初始化环境
         run: |
           docker rmi $(docker images -q)
@@ -55,7 +71,7 @@ jobs:
       
       - name: 复制.config文件
         run: |
-          cat ${{ env.FIRMWARE_TYPE }}.config > .config
+          cat ${{ inputs.firmware_type }}.config > .config
           cp .config lede/
       
       - name: 下载dl库
@@ -70,7 +86,7 @@ jobs:
           make V=s -j$(nproc)
       
       - name: 移动固件
-        run: mv lede/bin/targets/${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz ${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz
+        run: mv lede/bin/targets/${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz $PWD
       
       - name: 上传固件
         uses: actions/upload-artifact@v4
