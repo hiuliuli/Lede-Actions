@@ -19,4 +19,4 @@ jobs:
         tag: Rockchip
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: "release.tar.gz,foo/*.txt"
-        bodyFile: "body.md"
+        bodyFile: "README.md"
