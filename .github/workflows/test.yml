@@ -1,21 +1,21 @@
-name: Main
+name: Releases
 
-on: push
+on:
+  push:
+    tags:
+    - '*'
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Generate Changelog
-        run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
-        with:
-          body_path: ${{ github.workspace }}-CHANGELOG.txt
-          repository: my_gh_org/my_gh_repo
-          # note you'll typically need to create a personal access token
-          # with permissions to create releases in the other repo
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v4
+    - uses: ncipollo/release-action@v1
+      with:
+        tag: Rockchip
+        token: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: "release.tar.gz,foo/*.txt"
+        bodyFile: "body.md"
