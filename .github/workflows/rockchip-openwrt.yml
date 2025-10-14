@@ -23,7 +23,7 @@ jobs:
         run: |
           env="${{ inputs.config_name }}"
           if [[ "$env" =~ "${{ env.CONFIG_NAMES }}" ]]; then
-            echo "Error: Invalid environment value '${env}'. Must be 'mini' or 'docker'."
+            echo "Error: Invalid environment value '${env}'."
             exit 1
           fi
           echo "Input validation passed."
