@@ -3,15 +3,15 @@ name: Build Rockchip Openwrt
 on:
   workflow_dispatch:
     inputs:
-      firmware_type:
-        description: '固件类型（包含不同插件的固件）'
+      config_name:
+        description: '配置文件名称'
         required: true
         default: 'default'
         type: string
         
 env:
   FIRMWARE_TAG: rockchip
-  FIRMWARE_TYPE_LIST: "default"
+  CONFIG_NAMES: "default"
   CONFIG_PATH: config
   
 jobs:
@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     
-      - name: 输入验证
+      - name: 配置文件名称验证
         run: |
-          env="${{ inputs.firmware_type }}"
-          if [[ "$env" =~ "${{ env.FIRMWARE_TYPE_LIST }}" ]]; then
+          env="${{ inputs.config_name }}"
+          if [[ "$env" =~ "${{ env.CONFIG_NAMES }}" ]]; then
             echo "Error: Invalid environment value '${env}'. Must be 'mini' or 'docker'."
             exit 1
           fi
@@ -60,7 +60,7 @@ jobs:
           echo "--------------------------硬盘信息--------------------------"
           echo "硬盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
       
-      - name: 检出当前仓库
+      - name: 同步当前仓库文件
         uses: actions/checkout@main
       
       - name: 拉取目标仓库源码
@@ -72,12 +72,12 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
       
-      - name: 复制.config文件
+      - name: 生成.config文件
         run: |
-          cat ${{ env.CONFIG_PATH }}/${{ inputs.firmware_type }}.config > .config
+          cat ${{ env.CONFIG_PATH }}/${{ inputs.config_name }}.config > .config
           mv .config lede/
       
-      - name: 下载dl库
+      - name: 下载dl文件
         run: |
           cd lede
           make defconfig
@@ -88,7 +88,7 @@ jobs:
           cd lede
           make V=s -j$(nproc)
       
-      - name: 移动固件
+      - name: 移动固件到用户目录
         run: mv lede/bin/targets/${{ env.FIRMWARE_TAG }}/**/*${{ env.FIRMWARE_TAG }}*.img.gz $PWD
       
       - name: 上传固件
@@ -97,4 +97,4 @@ jobs:
           name: ${{ env.FIRMWARE_TAG }}
           path: ./*${{ env.FIRMWARE_TAG }}*.img.gz
           compression-level: 0    # 压缩级别0-9
-          retention-days: 3
+          retention-days: 3       # 文件保留天数
