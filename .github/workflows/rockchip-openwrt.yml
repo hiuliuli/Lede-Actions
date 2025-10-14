@@ -4,13 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       firmware_type:
-        description: '固件类型（包含不同插件的固件，默认mini固件）'
+        description: '固件类型（包含不同插件的固件）'
         required: true
-        default: 'mini'
+        default: 'default'
         type: string
         
 env:
   FIRMWARE_TAG: rockchip
+  FIRMWARE_TYPE_LIST: "default"
+  CONFIG_PATH: config
   
 jobs:
   build:
@@ -20,7 +22,7 @@ jobs:
       - name: 输入验证
         run: |
           env="${{ inputs.firmware_type }}"
-          if [[ "$env" != "mini" && "$env" != "docker" ]]; then
+          if [[ "$env" =~ "${{ env.FIRMWARE_TYPE_LIST }}" ]]; then
             echo "Error: Invalid environment value '${env}'. Must be 'mini' or 'docker'."
             exit 1
           fi
@@ -72,8 +74,8 @@ jobs:
       
       - name: 复制.config文件
         run: |
-          cat ${{ inputs.firmware_type }}.config > .config
-          cp .config lede/
+          cat ${{ env.CONFIG_PATH }}/${{ inputs.firmware_type }}.config > .config
+          mv .config lede/
       
       - name: 下载dl库
         run: |
@@ -94,4 +96,5 @@ jobs:
         with:
           name: ${{ env.FIRMWARE_TAG }}
           path: ./*${{ env.FIRMWARE_TAG }}*.img.gz
+          compression-level: 0    # 压缩级别0-9
           retention-days: 3
