@@ -11,7 +11,7 @@ on:
         
 env:
   FIRMWARE_TAG: rockchip
-  CONFIG_NAMES: "default"
+  CONFIG_NAMES: "default custom"
   CONFIG_PATH: config
   
 jobs:
