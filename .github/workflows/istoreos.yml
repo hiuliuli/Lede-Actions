@@ -1,4 +1,4 @@
-name: Build Rockchip Openwrt
+name: Build Rockchip iStoreOS
 
 on:
   workflow_dispatch:
