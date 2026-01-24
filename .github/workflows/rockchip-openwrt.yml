@@ -10,7 +10,7 @@ on:
         type: string
         
 env:
-  FIRMWARE_TAG: rockchip
+  FIRMWARE_TAG: rockchip-radxa-e20c-squashfs
   CONFIG_NAMES: "default docker custom"
   CONFIG_PATH: config
   
