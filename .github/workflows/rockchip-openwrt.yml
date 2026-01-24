@@ -45,7 +45,6 @@ jobs:
 
       - name: 初始化环境
         run: |
-          docker rmi `docker images -q`
           sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
           sudo -E apt-mark hold grub-efi-amd64-signed
           sudo docker image prune --all --force
