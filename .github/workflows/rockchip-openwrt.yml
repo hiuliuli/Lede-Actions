@@ -64,7 +64,7 @@ jobs:
         uses: actions/checkout@main
       
       - name: 拉取目标仓库源码
-        run: git clone https://github.com/hiuliuli/lede
+        run: git clone https://github.com/coolsnowwolf/lede.git
       
       - name: 更新feeds
         run: |
