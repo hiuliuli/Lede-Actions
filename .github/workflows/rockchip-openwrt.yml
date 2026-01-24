@@ -10,7 +10,7 @@ on:
         type: string
         
 env:
-  FIRMWARE_TAG: rockchip-radxa-e20c-squashfs
+  FIRMWARE_TAG: rockchip
   CONFIG_NAMES: "default docker custom"
   CONFIG_PATH: config
   
@@ -95,7 +95,7 @@ jobs:
       - name: 上传固件
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.FIRMWARE_TAG }}
-          path: ./*${{ env.FIRMWARE_TAG }}*.img.gz
+          # name: ${{ env.FIRMWARE_TAG }}
+          path: ./*.img.gz
           compression-level: 6    # 压缩级别0-9
           retention-days: 3       # 文件保留天数
