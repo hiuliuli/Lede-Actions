@@ -97,5 +97,5 @@ jobs:
         with:
           # name: ${{ env.FIRMWARE_TAG }}
           path: ./*.img.gz
-          compression-level: 6    # 压缩级别0-9
+          # compression-level: 6    # 压缩级别0-9
           retention-days: 3       # 文件保留天数
