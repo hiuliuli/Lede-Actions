@@ -8,11 +8,6 @@ on:
 
   # 支持手动触发
   workflow_dispatch:
-    # inputs:
-    #   use_ssh_debug:
-    #     description: "开启 SSH 调试（用于在线执行 make menuconfig 等）"
-    #     required: false
-    #     default: "false"
 
 env:
   REPO_URL: "https://github.com/coolsnowwolf/lede"
@@ -25,7 +20,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -84,13 +79,6 @@ jobs:
           cd openwrt
           make defconfig
 
-      # - name: SSH debug (optional)
-      #   if: github.event.inputs.use_ssh_debug == 'true'
-      #   uses: mxschmitt/action-tmate@v3
-      #   timeout-minutes: 40
-      #   with:
-      #     limit-access-to-actor: true
-
       - name: Download packages
         run: |
           cd openwrt
@@ -110,21 +98,18 @@ jobs:
           echo "TAG=OpenWrt-${NOW_UTC}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "Generated tag: OpenWrt-${NOW_UTC}-${SHORT_SHA}"
 
-      # 核心修改在这里：直接把输出目录的所有文件（包括 .tar.gz 压缩包）扔进 Release
       - name: Create GitHub Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
           name: "OpenWrt ${{ steps.tag.outputs.TAG }}"
           body: |
-            自动构建固件（coolsnowwolf/lede）。
+            自动构建固件
             - 源码分支：${{ env.REPO_BRANCH }}
             - 触发方式：${{ github.event_name }}
           draft: false
           prerelease: false
-          # 直接匹配 targets 下的所有文件（因为目录结构是 targets/架构/子架构/文件）
-          files: |
-            openwrt/bin/targets/**/*.img.gz
-            # openwrt/.config
+          # 只上传 targets 目录下所有以 .img.gz 结尾的文件
+          files: openwrt/bin/targets/**/*.img.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
