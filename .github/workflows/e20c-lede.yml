@@ -1,11 +1,11 @@
 name: Build LEDE (coolsnowwolf/lede)
 
 on:
-  # 每天 0:00（本地时间）自动编译
-  # 如需更改时区，修改 timezone 字段即可（IANA 时区字符串）
-  schedule:
-    - cron: "0 0 * * *"
-      timezone: "Asia/Shanghai"  # 改成你所在时区，例如 America/New_York
+  # # 每天 0:00（本地时间）自动编译
+  # # 如需更改时区，修改 timezone 字段即可（IANA 时区字符串）
+  # schedule:
+  #   - cron: "0 0 * * *"
+  #     timezone: "Asia/Shanghai"
 
   # 支持手动触发
   workflow_dispatch:
