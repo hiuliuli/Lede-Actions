@@ -124,7 +124,7 @@ jobs:
           prerelease: false
           # 直接匹配 targets 下的所有文件（因为目录结构是 targets/架构/子架构/文件）
           files: |
-            openwrt/bin/targets/**/*
+            openwrt/bin/targets/**/*.img.gz
             # openwrt/.config
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
