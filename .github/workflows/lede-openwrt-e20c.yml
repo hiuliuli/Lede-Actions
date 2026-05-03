@@ -69,12 +69,16 @@ jobs:
         run: |
           if [ -d files ]; then
             cp -r files openwrt/files
+          else
+            echo "Directory does not exist."
           fi
 
       - name: Copy custom script (optional)
         run: |
-          if [ -d custom-*.sh ]; then
+          if [ -f custom-*.sh ]; then
             cp custom-*.sh openwrt/package/base-files/files/etc/uci-defaults/custom-*.sh
+          else
+            echo "File does not exist."
           fi
 
       - name: Load configuration
