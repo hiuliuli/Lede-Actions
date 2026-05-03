@@ -62,6 +62,12 @@ jobs:
             cp -r files openwrt/files
           fi
 
+      - name: Copy custom script (optional)
+        run: |
+          if [ -d custom-*.sh ]; then
+            cp custom-*.sh openwrt/package/base-files/files/etc/uci-defaults/custom-*.sh
+          fi
+
       - name: Load configuration
         run: |
           if [ -f "$CONFIG_FILE" ]; then
