@@ -95,7 +95,7 @@ jobs:
           tag_name: ${{ steps.tag.outputs.TAG }}
           name: "OpenWrt ${{ steps.tag.outputs.TAG }}"
           body: |
-            自动构建固件
+            自动构建固件(Lienol)
             - 源码分支：${{ env.REPO_BRANCH }}
             - 触发方式：${{ github.event_name }}
           draft: false
