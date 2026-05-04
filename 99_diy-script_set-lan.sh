@@ -23,3 +23,5 @@ uci commit
 
 # 7. 删除脚本本身，确保它只在第一次启动时运行
 exit 0
+
+reboot
