@@ -69,14 +69,16 @@ jobs:
         run: |
           if [ -d files ]; then
             cp -r files openwrt/files
+            echo "Is copyed."
           else
             echo "Directory does not exist."
           fi
 
       - name: Copy custom script (optional)
         run: |
-          if [ -f custom-*.sh ]; then
-            cp custom-*.sh openwrt/package/base-files/files/etc/uci-defaults/custom-*.sh
+          if [ -f 99_diy-script_*.sh ]; then
+            cp 99_diy-script_*.sh openwrt/package/base-files/files/etc/uci-defaults/custom-*.sh
+            echo "Is copyed."
           else
             echo "File does not exist."
           fi
