@@ -14,9 +14,9 @@ uci -q delete network.lan.dns
 uci set dhcp.lan.ignore='1'
 
 # 5. 放宽LAN区域的防火墙规则，确保可以访问Web后台
-uci set firewall.@zone[0].input='ACCEPT'
-uci set firewall.@zone[0].output='ACCEPT'
-uci set firewall.@zone[0].forward='ACCEPT'
+# uci set firewall.@zone[0].input='ACCEPT'
+# uci set firewall.@zone[0].output='ACCEPT'
+# uci set firewall.@zone[0].forward='ACCEPT'
 
 # 6. 提交所有更改
 uci commit
