@@ -1,0 +1,105 @@
+name: Build LEDE and Release
+
+on:
+  workflow_dispatch:   # 仅支持手动触发
+
+permissions:
+  contents: write      # 发布 Release 所需的权限
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出当前仓库，获取 .config 和 uci-defaults 脚本
+      - name: Checkout current repository
+        uses: actions/checkout@v3
+
+      # 2. 拉取 LEDE 源码（浅克隆以加快速度）
+      - name: Clone LEDE source
+        run: |
+          git clone --depth 1 https://github.com/coolsnowwolf/lede.git lede
+
+      # 3. 将仓库中的配置文件与自定义脚本放置到正确位置
+      - name: Prepare custom config and uci-defaults scripts
+        run: |
+          cp Lede/.config lede/.config
+          mkdir -p lede/files/etc/uci-defaults
+          # 复制所有匹配 99_diy-script_*.sh 的文件（假设它们位于仓库根目录）
+          if ls 99_diy-script_*.sh 1> /dev/null 2>&1; then
+            cp 99_diy-script_*.sh lede/files/etc/uci-defaults/
+            echo "Copied uci-defaults scripts:"
+            ls lede/files/etc/uci-defaults/
+          else
+            echo "No 99_diy-script_*.sh files found, skipping."
+          fi
+
+      # 4. 缓存下载的软件包（dl 目录），根据配置和脚本的哈希值更新
+      - name: Cache downloaded packages (dl)
+        uses: actions/cache@v3
+        with:
+          path: lede/dl
+          key: ${{ runner.os }}-lede-dl-${{ hashFiles('Lede/.config', '99_diy-script_*.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-lede-dl-
+
+      # 5. 缓存编译器缓存（ccache），同样基于配置变化而刷新
+      - name: Cache compiler cache (ccache)
+        uses: actions/cache@v3
+        with:
+          path: lede/.ccache
+          key: ${{ runner.os }}-lede-ccache-${{ hashFiles('Lede/.config', '99_diy-script_*.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-lede-ccache-
+
+      # 6. 安装编译所需的依赖包（包含 ccache）
+      - name: Install build dependencies
+        run: |
+          sudo apt update -y
+          sudo apt full-upgrade -y
+          sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+            bzip2 ccache clang cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext \
+            genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
+            libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
+            libreadline-dev libssl-dev libtool llvm lrzsz libnsl-dev ninja-build p7zip p7zip-full patch pkgconf \
+            python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
+            swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev python3-distutils file ccache
+
+      # 7. 设置 ccache 环境变量，让编译过程使用缓存目录
+      - name: Configure ccache
+        run: |
+          echo "CCACHE_DIR=$GITHUB_WORKSPACE/lede/.ccache" >> $GITHUB_ENV
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+
+      # 8. 更新并安装 feeds
+      - name: Update and install feeds
+        run: |
+          cd lede
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      # 9. 根据 .config 生成完整的构建配置
+      - name: Expand config via defconfig
+        run: |
+          cd lede
+          make defconfig
+
+      # 10. 执行编译（使用所有可用核心，输出详细日志）
+      - name: Compile LEDE
+        run: |
+          cd lede
+          make -j$(nproc) V=s
+
+      # 11. 将生成的固件（*.img.gz）发布到仓库的 Release 中
+      - name: Upload firmware to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: lede-${{ github.run_id }}-${{ github.run_attempt }}
+          files: lede/bin/targets/**/*.img.gz
+          body: |
+            LEDE 手动构建完成。
+            源码: coolsnowwolf/lede
+            运行编号: ${{ github.run_id }}
+            尝试次数: ${{ github.run_attempt }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
